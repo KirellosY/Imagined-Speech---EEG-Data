@@ -2,244 +2,149 @@
 
 ## Overview
 
-This graduation project investigates the classification of imagined speech from EEG signals using deep learning techniques. The work is based on the **BCI Competition 2020 – Track 3 Imagined Speech Dataset**, where participants imagine speaking specific words while their brain activity is recorded through a 64-channel EEG system.
+This graduation project investigates EEG-based imagined speech recognition using deep learning techniques. The work is based on the BCI Competition 2020 Track 3 dataset and focuses on classifying three imagined speech commands (**Hello**, **Help Me**, and **Stop**) from non-invasive EEG recordings.
 
-While the original dataset contains five imagined speech classes, this project focuses on a subset of three classes:
-
-* Hello
-* Help Me
-* Stop
-
-The objective is to develop a robust Brain-Computer Interface (BCI) capable of recognizing imagined speech directly from EEG recordings.
+The proposed framework combines EEG preprocessing, topographic brain mapping, data augmentation, and a 3D Convolutional Neural Network (3D-CNN) to learn spatial-temporal neural representations associated with imagined speech.
 
 ---
 
-## Dataset
+# Results
 
-The dataset was collected from **15 healthy subjects (20–30 years old)** and released as part of the **International BCI Competition 2020**.
+The proposed 3D-CNN model was evaluated on a three-class imagined speech classification task using EEG recordings from the BCI Competition 2020 dataset. The model was trained on topographic EEG representations generated after preprocessing and spatial mapping of neural activity.
 
-### Original Classes
+## Performance Summary
 
-1. Hello
-2. Help Me
-3. Stop
-4. Thank You
-5. Yes
+| Metric | Value |
+|----------|----------|
+| Accuracy | 63.3% |
+| Macro Precision | 63.1% |
+| Macro Recall | 63.3% |
+| Macro F1-Score | 62.8% |
 
-### Classes Used in This Project
+## Confusion Matrix
 
-To simplify the classification task and focus on high-quality discrimination, only the following classes were retained:
+<p align="center">
+  <img src="figures/confusion_matrix.png" width="650">
+</p>
 
-* Hello
-* Help Me
-* Stop
+### Analysis
 
-### Dataset Structure
+The confusion matrix demonstrates that the model successfully distinguishes between the three imagined speech classes, achieving the highest recognition performance for the **Hello** class.
 
-For each subject:
+Key observations:
 
-| Split      | Trials       |
-| ---------- | ------------ |
-| Training   | 300 labeled  |
-| Validation | 50 labeled   |
-| Test       | 50 unlabeled |
+- **Hello** achieved the strongest classification performance, with 8 out of 10 samples correctly identified.
+- **Help Me** showed moderate performance, with most errors occurring when samples were confused with **Hello**.
+- **Stop** was the most challenging class, frequently being misclassified as **Help Me**.
+- The model demonstrates meaningful discriminative capability despite the inherent difficulty and low signal-to-noise ratio of imagined speech EEG data.
 
-Each subject's data is stored in MATLAB format (`.mat`) files.
+## Precision, Recall and F1-Score per Class
+
+<p align="center">
+  <img src="figures/classification_metrics.png" width="700">
+</p>
+
+### Class-wise Performance
+
+| Class | Precision | Recall | F1-Score |
+|---------|---------|---------|---------|
+| Hello | 0.67 | 0.80 | 0.73 |
+| Help Me | 0.60 | 0.60 | 0.60 |
+| Stop | 0.63 | 0.50 | 0.56 |
+
+### Analysis
+
+The class-wise evaluation highlights variations in classification difficulty:
+
+- **Hello** achieved the highest recall (80%), indicating that the model consistently recognizes this imagined speech category.
+- **Help Me** maintained balanced precision and recall values, demonstrating stable classification behavior.
+- **Stop** exhibited lower recall, suggesting greater overlap in neural patterns with other imagined speech classes.
+- The overall results indicate that the proposed framework successfully captures meaningful spatial-temporal EEG features for imagined speech decoding.
 
 ---
 
-# Notebook Workflow
+## Dataset Description
 
-The notebook follows the complete EEG processing and classification pipeline shown below:
+This project utilizes the **BCI Competition 2020 – Track 3: Imagined Speech Classification Dataset**, a publicly available EEG dataset designed for imagined speech recognition research.
+
+EEG signals were recorded from **15 healthy participants (20–30 years old)** using a **64-channel EEG acquisition system** sampled at **256 Hz**.
+
+Participants were instructed to imagine speaking one of five words or phrases commonly used in daily communication:
+
+- Hello
+- Help Me
+- Stop
+- Thank You
+- Yes
+
+For this project, only three classes were selected:
+
+- Hello
+- Help Me
+- Stop
+
+### Experimental Protocol
+
+Each trial followed a structured imagined-speech paradigm:
+
+1. An auditory cue (target word) was presented for **2 seconds**.
+2. A fixation cross appeared for **0.8–1.2 seconds**.
+3. The participant imagined pronouncing the instructed word.
+4. Steps 2–3 were repeated **four times** for the same cue.
+5. A **3-second relaxation period** followed before the next trial.
+
+This design allows multiple imagined speech repetitions to be collected for each target word while minimizing muscular speech activity.
+
+---
+
+# Project Workflow
 
 ```text
-Raw EEG Signals (.mat)
-           │
-           ▼
-Data Loading & Parsing
-           │
-           ▼
-Channel Selection
-           │
-           ▼
-Signal Preprocessing
-   ├─ 40 Hz Notch Filter
-   └─ Common Average Referencing (CAR)
-           │
-           ▼
-Temporal Windowing
-(125 ms windows, 50% overlap)
-           │
-           ▼
-EEG Topographic Mapping
-           │
-           ▼
-RGB Spatial Brain Maps
-           │
-           ▼
-3-Class Filtering
+Raw EEG Signals (.mat files)
+            │
+            ▼
+Data Loading
+            │
+            ▼
+Class Selection
 (Hello, Help Me, Stop)
-           │
-           ▼
-Train / Validation / Test Split
-           │
-           ▼
-Data Augmentation
+            │
+            ▼
+EEG Preprocessing
+ ├── Notch Filtering
+ └── Common Average Referencing (CAR)
+            │
+            ▼
+Signal Segmentation
+(Temporal Windowing)
+            │
+            ▼
+EEG Topographic Mapping
+            │
+            ▼
+RGB Brain Activity Images
+            │
+            ▼
+Dataset Balancing & Augmentation
 (Gaussian Noise Injection)
-           │
-           ▼
-3D CNN Training
-(Keras Tuner Optimization)
-           │
-           ▼
+            │
+            ▼
+Train / Validation Split
+            │
+            ▼
+3D CNN Model
+            │
+            ▼
+Hyperparameter Optimization
+(Keras Tuner)
+            │
+            ▼
 9-Fold Cross Validation
-           │
-           ▼
+            │
+            ▼
 Performance Evaluation
-   ├─ Accuracy
-   ├─ Precision
-   ├─ Recall
-   ├─ F1 Score
-   └─ Confusion Matrix
-```
-
----
-
-## Signal Preprocessing
-
-Several preprocessing stages were applied before model training:
-
-### 1. Notch Filtering
-
-A digital notch filter centered at **40 Hz** was applied to suppress power-line and environmental interference while preserving useful neural activity.
-
-### 2. Common Average Referencing (CAR)
-
-Common Average Referencing was used to reduce global noise and improve the signal-to-noise ratio across EEG channels.
-
-### 3. Temporal Windowing
-
-The EEG signals were segmented into:
-
-* Window Length: **125 ms**
-* Overlap: **50%**
-* Sampling Frequency: **256 Hz**
-
-This produces multiple temporal snapshots that preserve both spatial and temporal information.
-
----
-
-## EEG Topographic Representation
-
-Instead of directly feeding raw EEG signals into the network, electrode values are projected onto a 2D scalp layout to generate topographic brain activity maps.
-
-The resulting representations:
-
-* Preserve spatial relationships between electrodes.
-* Convert EEG signals into image-like structures.
-* Enable the use of convolutional neural networks.
-
-Each temporal window is transformed into an RGB topographic image, creating a sequence of brain activity maps over time.
-
----
-
-## Model Architecture
-
-The proposed model is based on a **3D Convolutional Neural Network (3D-CNN)** designed to learn both spatial and temporal EEG patterns simultaneously.
-
-### Architecture Overview
-
-```text
-Input Topographic Maps
-        │
-        ▼
-3D Convolution Layer
-        │
-        ▼
-Batch Normalization
-        │
-        ▼
-Max Pooling
-        │
-        ▼
-3D Convolution Layer
-        │
-        ▼
-Batch Normalization
-        │
-        ▼
-Max Pooling
-        │
-        ▼
-Flatten
-        │
-        ▼
-Dense Layer
-        │
-        ▼
-Dropout
-        │
-        ▼
-Softmax Output
-(3 Classes)
-```
-
-### Hyperparameter Optimization
-
-The architecture was automatically optimized using **Keras Tuner**, including:
-
-* Number of convolution filters
-* Kernel sizes
-* Dense layer size
-* Dropout rate
-* Learning rate
-
----
-
-## Data Augmentation
-
-To improve generalization and reduce overfitting, targeted data augmentation was performed by injecting low-amplitude Gaussian noise into EEG samples.
-
-This approach:
-
-* Increases training diversity.
-* Preserves class characteristics.
-* Improves model robustness.
-
----
-
-## Evaluation
-
-Model performance is assessed using:
-
-* Accuracy
-* Precision
-* Recall
-* F1-Score
-* Confusion Matrix
-
-A **9-Fold Cross-Validation** strategy is employed to ensure reliable performance estimation across subjects and trials.
-
----
-
-## Technologies Used
-
-* Python
-* TensorFlow / Keras
-* Keras Tuner
-* NumPy
-* SciPy
-* Pandas
-* Scikit-Learn
-* Matplotlib
-
----
-
-## Acknowledgments
-
-This project uses data from the **2020 International BCI Competition (Track 3: Imagined Speech Classification)**.
-
-Dataset Source:
-https://osf.io/pq7vb/
-
-All credit for data collection, experimental design, and dataset publication belongs to the original authors and competition organizers.
+ ├── Accuracy
+ ├── Precision
+ ├── Recall
+ ├── F1 Score
+ └── Confusion Matrix
